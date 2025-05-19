@@ -13,13 +13,11 @@ EXPORTS
     insertExposureBinary@12 @12
     insertExposureBulk = insertExposureBulk@8 @13
     insertExposureBulk@8 @14
-    insertTradeBinary = insertTradeBinary@12 @15
-    insertTradeBinary@12 @16
-    insertTradeBulk = insertTradeBulk@8 @17
-    insertTradeBulk@8 @18
-    openDatabase = openDatabase@8 @19
-    openDatabase@8 @20
-    upsertTradeBinary = upsertTradeBinary@12 @21
-    upsertTradeBinary@12 @22
-    upsertTradeBulk = upsertTradeBulk@8 @23
-    upsertTradeBulk@8 @24
+    insertTradeBulk = insertTradeBulk@8 @15
+    insertTradeBulk@8 @16
+    openDatabase = openDatabase@8 @17
+    openDatabase@8 @18
+    upsertTradeBinary = upsertTradeBinary@12 @19
+    upsertTradeBinary@12 @20
+    upsertTradeBulk = upsertTradeBulk@8 @21
+    upsertTradeBulk@8 @22

@@ -19,7 +19,6 @@
    bool  insertTradeBinary(int dbHandle,          const uchar &binaryData[], int dataSize);
    bool  upsertTradeBinary(int dbHandle,          const uchar &binaryData[], int dataSize);
    bool  insertExposureBinary(int dbHandle,       const uchar &binaryData[], int dataSize);
-   string getLastSqliteError();
 
    void createTradeData(
       int         account,

@@ -3,8 +3,14 @@
 - Compiling on **MacBook Pro (Retina, 15-inch, Mid 2015)** for Windows 32-bit target
 - Generates a `.dll` with `.def` file to avoid name mangling
 - Intended for use **only** on Windows MetaTrader 4 (MT4)
-- Code #CCA (Interval HFT for Trade Terminal) | default : 5 second
-- Code #XSG (Interval Exposure) | default :30 second
+- Trade Logging Interval (#CCA): Default is every 5 seconds.
+- Exposure Logging Interval (#XSG): Default is every 30 seconds.
+- Order Types: Supports only market orders (buy or sell), not pending orders.
+- Upsert Behavior:
+      - If new data arrives for a trade or exposure record, it replaces the existing entry (update).
+      - If no existing record is found, it inserts a new entry.
+- Exposure Handling: Clears all previous exposure data when the EA starts.
+- EA Replacement Scenario: If the EA is changed while trades are still open, those open trades remain unchanged in the SQLite database.
 ---
 
 ## Prerequisites

@@ -42,26 +42,6 @@ typedef struct {
     double usd_value;
 } ExposureData;
 
-
-// Buffer untuk menyimpan error message terakhir
-static char lastErrMsg[512] = {0};
-
-// Fungsi helper untuk menyimpan pesan error
-static void saveLastError(const char* msg) {
-    if (msg) {
-        strncpy(lastErrMsg, msg, sizeof(lastErrMsg) - 1);
-        lastErrMsg[sizeof(lastErrMsg) - 1] = '\0';
-    } else {
-        lastErrMsg[0] = '\0';
-    }
-}
-
-// Ekspor fungsi ini supaya MQL4 bisa memanggilnya
-DLL_EXPORT const char* __stdcall getLastSqliteError() {
-    return lastErrMsg;
-}
-
-
 DLL_EXPORT bool __stdcall openDatabase(const char* dbName, sqlite3** outDb) {
     int rc = sqlite3_open(dbName, outDb);
     if (rc) {
@@ -85,27 +65,28 @@ DLL_EXPORT bool __stdcall createTable(sqlite3* db) {
     const char* sql =
         // Tabel trades
         "CREATE TABLE IF NOT EXISTS trades ("
-        " account      INTEGER,"
-        " ticket       INTEGER PRIMARY KEY,"
-        " symbol       TEXT,"
-        " type         TEXT,"
-        " lots         REAL,"
-        " open_price   REAL,"
-        " stop_loss    REAL,"
-        " take_profit  REAL,"
-        " profit       REAL,"
-        " open_time    TEXT,"
-        " close_time   TEXT NULL"
+        " account       INTEGER NOT NULL,"
+        " ticket        INTEGER PRIMARY KEY,"
+        " symbol        TEXT    NOT NULL,"
+        " type          TEXT    NOT NULL,"
+        " lots          REAL    NOT NULL,"
+        " open_price    REAL    NOT NULL,"
+        " stop_loss     REAL    NOT NULL,"
+        " take_profit   REAL    NOT NULL,"
+        " profit        REAL    NOT NULL,"
+        " open_time     TEXT    NOT NULL,"
+        " close_time    TEXT"  // boleh NULL
         ");"
 
         // Tabel exposure_log
         "CREATE TABLE IF NOT EXISTS exposure_log ("
-        " id            INTEGER PRIMARY KEY AUTOINCREMENT,"
-        " snapshot_time TEXT    NOT NULL,"
-        " currency      TEXT    NOT NULL,"
-        " amount        REAL    NOT NULL,"
-        " rate_to_usd   REAL    NOT NULL,"
-        " usd_value     REAL    NOT NULL"
+        " id             INTEGER PRIMARY KEY AUTOINCREMENT,"
+        " snapshot_time  TEXT    NOT NULL,"
+        " currency       TEXT    NOT NULL,"
+        " amount         REAL    NOT NULL,"
+        " rate_to_usd    REAL    NOT NULL,"
+        " usd_value      REAL    NOT NULL,"
+        " UNIQUE(currency)"
         ");";
 
     char* err = NULL;
@@ -118,9 +99,9 @@ DLL_EXPORT bool __stdcall createTable(sqlite3* db) {
     return true;
 }
 
+
 DLL_EXPORT bool __stdcall upsertTradeBinary(sqlite3* db, const void* binaryData, size_t dataSize) {
     if (!binaryData || dataSize % sizeof(TradeData) != 0) {
-        saveLastError("Invalid binary data size");
         return false;
     }
 
@@ -143,7 +124,6 @@ DLL_EXPORT bool __stdcall upsertTradeBinary(sqlite3* db, const void* binaryData,
     sqlite3_stmt* stmt;
     int rc = sqlite3_prepare_v2(db, sqlUpsert, -1, &stmt, NULL);
     if (rc != SQLITE_OK) {
-        saveLastError(sqlite3_errmsg(db));
         return false;
     }
 
@@ -174,7 +154,6 @@ DLL_EXPORT bool __stdcall upsertTradeBinary(sqlite3* db, const void* binaryData,
 
         rc = sqlite3_step(stmt);
         if (rc != SQLITE_DONE) {
-            saveLastError(sqlite3_errmsg(db));
             sqlite3_finalize(stmt);
             sqlite3_exec(db, "ROLLBACK", NULL, NULL, NULL);
             return false;
@@ -184,76 +163,75 @@ DLL_EXPORT bool __stdcall upsertTradeBinary(sqlite3* db, const void* binaryData,
 
     sqlite3_finalize(stmt);
     sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-    saveLastError(NULL);
     return true;
 }
 
 
 // Upsert trade data dalam format binary
-DLL_EXPORT bool __stdcall upsertTradeBinary(sqlite3* db, const void* binaryData, size_t dataSize) {
-    if (!binaryData || dataSize % sizeof(TradeData) != 0) {
-        fprintf(stderr, "Invalid binary data size\n");
-        return false;
-    }
+// DLL_EXPORT bool __stdcall upsertTradeBinary(sqlite3* db, const void* binaryData, size_t dataSize) {
+//     if (!binaryData || dataSize % sizeof(TradeData) != 0) {
+//         fprintf(stderr, "Invalid binary data size\n");
+//         return false;
+//     }
 
-    const char* sqlUpsert =
-      "INSERT INTO trades "
-      "(account,ticket,symbol,type,lots,open_price,stop_loss,take_profit,profit,open_time,close_time) "
-      "VALUES (?,?,?,?,?,?,?,?,?,?,?) "
-      "ON CONFLICT(ticket) DO UPDATE SET "
-      "  account     = excluded.account,"
-      "  symbol      = excluded.symbol,"
-      "  type        = excluded.type,"
-      "  lots        = excluded.lots,"
-      "  open_price  = excluded.open_price,"
-      "  stop_loss   = excluded.stop_loss,"
-      "  take_profit = excluded.take_profit,"
-      "  profit      = excluded.profit,"
-      "  open_time   = excluded.open_time,"
-      "  close_time  = excluded.close_time;";
+//     const char* sqlUpsert =
+//       "INSERT INTO trades "
+//       "(account,ticket,symbol,type,lots,open_price,stop_loss,take_profit,profit,open_time,close_time) "
+//       "VALUES (?,?,?,?,?,?,?,?,?,?,?) "
+//       "ON CONFLICT(ticket) DO UPDATE SET "
+//       "  account     = excluded.account,"
+//       "  symbol      = excluded.symbol,"
+//       "  type        = excluded.type,"
+//       "  lots        = excluded.lots,"
+//       "  open_price  = excluded.open_price,"
+//       "  stop_loss   = excluded.stop_loss,"
+//       "  take_profit = excluded.take_profit,"
+//       "  profit      = excluded.profit,"
+//       "  open_time   = excluded.open_time,"
+//       "  close_time  = excluded.close_time;";
 
-    sqlite3_stmt* stmt;
-    if(sqlite3_prepare_v2(db, sqlUpsert, -1, &stmt, NULL) != SQLITE_OK) {
-        return false;
-    }
+//     sqlite3_stmt* stmt;
+//     if(sqlite3_prepare_v2(db, sqlUpsert, -1, &stmt, NULL) != SQLITE_OK) {
+//         return false;
+//     }
 
-    // Begin transaction untuk kinerja
-    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+//     // Begin transaction untuk kinerja
+//     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
 
-    const TradeData* trades = (const TradeData*)binaryData;
-    size_t tradeCount = dataSize / sizeof(TradeData);
+//     const TradeData* trades = (const TradeData*)binaryData;
+//     size_t tradeCount = dataSize / sizeof(TradeData);
 
-    for (size_t i = 0; i < tradeCount; i++) {
-        const TradeData* trade = &trades[i];
+//     for (size_t i = 0; i < tradeCount; i++) {
+//         const TradeData* trade = &trades[i];
 
-        sqlite3_bind_int(stmt,    1, trade->account);
-        sqlite3_bind_int(stmt,    2, trade->ticket);
-        sqlite3_bind_text(stmt,   3, trade->symbol,    -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt,   4, trade->type,      -1, SQLITE_STATIC);
-        sqlite3_bind_double(stmt, 5, trade->lots);
-        sqlite3_bind_double(stmt, 6, trade->open_price);
-        sqlite3_bind_double(stmt, 7, trade->stop_loss);
-        sqlite3_bind_double(stmt, 8, trade->take_profit);
-        sqlite3_bind_double(stmt, 9, trade->profit);
-        sqlite3_bind_text(stmt,  10, trade->open_time, -1, SQLITE_STATIC);
+//         sqlite3_bind_int(stmt,    1, trade->account);
+//         sqlite3_bind_int(stmt,    2, trade->ticket);
+//         sqlite3_bind_text(stmt,   3, trade->symbol,    -1, SQLITE_STATIC);
+//         sqlite3_bind_text(stmt,   4, trade->type,      -1, SQLITE_STATIC);
+//         sqlite3_bind_double(stmt, 5, trade->lots);
+//         sqlite3_bind_double(stmt, 6, trade->open_price);
+//         sqlite3_bind_double(stmt, 7, trade->stop_loss);
+//         sqlite3_bind_double(stmt, 8, trade->take_profit);
+//         sqlite3_bind_double(stmt, 9, trade->profit);
+//         sqlite3_bind_text(stmt,  10, trade->open_time, -1, SQLITE_STATIC);
 
-        if (trade->close_time[0] != '\0')
-            sqlite3_bind_text(stmt, 11, trade->close_time, -1, SQLITE_STATIC);
-        else
-            sqlite3_bind_null(stmt, 11);
+//         if (trade->close_time[0] != '\0')
+//             sqlite3_bind_text(stmt, 11, trade->close_time, -1, SQLITE_STATIC);
+//         else
+//             sqlite3_bind_null(stmt, 11);
 
-        if (sqlite3_step(stmt) != SQLITE_DONE) {
-            sqlite3_finalize(stmt);
-            sqlite3_exec(db, "ROLLBACK", NULL, NULL, NULL);
-            return false;
-        }
-        sqlite3_reset(stmt);
-    }
+//         if (sqlite3_step(stmt) != SQLITE_DONE) {
+//             sqlite3_finalize(stmt);
+//             sqlite3_exec(db, "ROLLBACK", NULL, NULL, NULL);
+//             return false;
+//         }
+//         sqlite3_reset(stmt);
+//     }
 
-    sqlite3_finalize(stmt);
-    sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
-    return true;
-}
+//     sqlite3_finalize(stmt);
+//     sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
+//     return true;
+// }
 
 // Hapus seluruh data di exposure_log
 DLL_EXPORT bool __stdcall clearExposureLog(sqlite3* db) {
@@ -277,8 +255,13 @@ DLL_EXPORT bool __stdcall insertExposureBinary(sqlite3* db, const void* binaryDa
 
     const char* sqlIns =
         "INSERT INTO exposure_log "
-        "(snapshot_time,currency,amount,rate_to_usd,usd_value) "
-        "VALUES (?,?,?,?,?);";
+        "(snapshot_time, currency, amount, rate_to_usd, usd_value) "
+        "VALUES (?, ?, ?, ?, ?) "
+        "ON CONFLICT(currency) DO UPDATE SET "
+        "snapshot_time = excluded.snapshot_time, "
+        "amount = excluded.amount, "
+        "rate_to_usd = excluded.rate_to_usd, "
+        "usd_value = excluded.usd_value;";
 
     sqlite3_stmt* stmt = nullptr;
     if (sqlite3_prepare_v2(db, sqlIns, -1, &stmt, NULL) != SQLITE_OK) {
@@ -420,7 +403,7 @@ DLL_EXPORT bool __stdcall insertTradeBulk(sqlite3* db, const char* csvData) {
     free(dup);
 
     // Call binary version with converted data
-    bool result = insertTradeBinary(db, trades, tradeIndex * sizeof(TradeData));
+    bool result = upsertTradeBinary(db, trades, tradeIndex * sizeof(TradeData));
     free(trades);
     return result;
 }
@@ -532,10 +515,6 @@ DLL_EXPORT bool __stdcall insertExposureBulk(sqlite3* db, const char* csvData) {
     bool result = insertExposureBinary(db, exposures, exposureIndex * sizeof(ExposureData));
     free(exposures);
     return result;
-}
-
-DLL_EXPORT bool __stdcall const char* getLastSqliteError() {
-    return lastErrMsg;
 }
 
 #endif  // SQLITE_INTEGRATED_H
