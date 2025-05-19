@@ -1,0 +1,16 @@
+**** Disclamer *****
+
+Complier with macbook PRo
+v3  -> 32 bit windows
+    -> menghilangkan namling dengan di buatnya .def
+    -> Only Windows MT4
+    -> HOW TO COMPILE
+      -> i686-w64-mingw32-gcc -shared \
+  -I./sqlite-amalgamation-3490100 \
+  -o sqlite_32.dll \
+  sqlite_integrated.c sqlite-amalgamation-3490100/sqlite3.c \
+  -Wl,--add-stdcall-alias \
+  -Wl,--output-def,sqlite.def \
+  -static-libgcc \
+  -static-libstdc++
+

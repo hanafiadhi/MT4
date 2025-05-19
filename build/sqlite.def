@@ -1,0 +1,25 @@
+EXPORTS
+    clearExposureLog = clearExposureLog@4 @1
+    clearExposureLog@4 @2
+    closeDatabase = closeDatabase@4 @3
+    closeDatabase@4 @4
+    createExposureData = createExposureData@36 @5
+    createExposureData@36 @6
+    createTable = createTable@4 @7
+    createTable@4 @8
+    createTradeData = createTradeData@68 @9
+    createTradeData@68 @10
+    insertExposureBinary = insertExposureBinary@12 @11
+    insertExposureBinary@12 @12
+    insertExposureBulk = insertExposureBulk@8 @13
+    insertExposureBulk@8 @14
+    insertTradeBinary = insertTradeBinary@12 @15
+    insertTradeBinary@12 @16
+    insertTradeBulk = insertTradeBulk@8 @17
+    insertTradeBulk@8 @18
+    openDatabase = openDatabase@8 @19
+    openDatabase@8 @20
+    upsertTradeBinary = upsertTradeBinary@12 @21
+    upsertTradeBinary@12 @22
+    upsertTradeBulk = upsertTradeBulk@8 @23
+    upsertTradeBulk@8 @24
