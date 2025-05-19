@@ -61,9 +61,9 @@ datetime lastTradeUpdate      = 0;
 datetime lastExposureUpdate   = 0;
 
 // Input parameters
-input string DBFileName               = "kunglau.db";
-input int    TradeUpdateInterval      = 5;
-input int    ExposureUpdateInterval   = 30;
+input string DBFileName               = "traders_family.db";
+input int    TradeUpdateInterval      = 5;   // #CCA (Interval HFT untuk Trade Terminal)
+input int    ExposureUpdateInterval   = 30;  // #XSG (Interval Exposure)
 input bool   LogClosedTrades          = false;
 
 //+------------------------------------------------------------------+

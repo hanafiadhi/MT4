@@ -3,7 +3,8 @@
 - Compiling on **MacBook Pro (Retina, 15-inch, Mid 2015)** for Windows 32-bit target
 - Generates a `.dll` with `.def` file to avoid name mangling
 - Intended for use **only** on Windows MetaTrader 4 (MT4)
-
+- Code #CCA (Interval HFT for Trade Terminal) | default : 5 second
+- Code #XSG (Interval Exposure) | default :30 second
 ---
 
 ## Prerequisites
